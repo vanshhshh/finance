@@ -4,10 +4,10 @@ dist
 .turbo
 coverage
 *.log
+*.tsbuildinfo
 .env
 .env.local
 .env.*.local
 apps/api/generated
 apps/api/prisma/dev.db
 apps/api/prisma/dev.db-journal
-
