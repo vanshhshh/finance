@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #eef4f7;
+  color: #07141f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input,
+select,
+textarea {
+  @apply rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-ink outline-none transition focus:border-tide focus:ring-2 focus:ring-tide/10;
+}
+
+button {
+  @apply transition;
+}
+
+table {
+  border-collapse: collapse;
+}
+

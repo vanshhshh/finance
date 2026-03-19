@@ -1,0 +1,35 @@
+{
+  "name": "@finance-platform/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/run-next.mjs build",
+    "dev": "node scripts/run-next.mjs dev",
+    "lint": "npx tsc --noEmit",
+    "start": "node scripts/run-next.mjs start"
+  },
+  "dependencies": {
+    "@finance-platform/shared": "*",
+    "@tanstack/react-query": "^5.66.8",
+    "@tanstack/react-query-devtools": "^5.66.8",
+    "clsx": "^2.1.1",
+    "firebase": "^11.4.0",
+    "lucide-react": "^0.483.0",
+    "next": "^14.2.26",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.1",
+    "socket.io-client": "^4.8.1",
+    "tailwind-merge": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.2"
+  }
+}

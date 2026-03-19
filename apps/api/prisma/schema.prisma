@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  APPROVER1
+  APPROVER2
+  APPROVER3
+  APPROVER4
+  FINANCE
+}
+
+enum PaymentStatus {
+  CURRENT
+  PARTIAL
+  OVERDUE
+  PAID
+  DISPUTED
+  FUTURE
+}
+
+enum PaymentCategory {
+  ACTIVE
+  FORMER
+  DISPUTED
+  FUTURE
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PARTIAL
+  PAID
+  UNPAID
+  VOID
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
+}
+
+enum ImportSource {
+  MANUAL
+  EXCEL
+  ZOHO_WEBHOOK
+  ZOHO_POLL
+}
+
+enum ZohoEventType {
+  FILE_CREATED
+  FILE_UPDATED
+  RECORD_UPDATED
+  MANUAL_SYNC
+}
+
+model User {
+  id               String            @id @default(cuid())
+  firebaseUid      String?           @unique
+  name             String
+  email            String            @unique
+  role             UserRole          @default(FINANCE)
+  branch           String?
+  isActive         Boolean           @default(true)
+  createdExpenses  Expense[]         @relation("ExpenseCreatedBy")
+  approvedExpenses Expense[]         @relation("ExpenseApprovedBy")
+  approvals        ExpenseApproval[] @relation("ApprovalActor")
+  settlements      ExpenseSettlement[] @relation("SettlementActor")
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  importBatches    ImportBatch[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([role])
+  @@index([branch])
+}
+
+model Payment {
+  id               String          @id @default(cuid())
+  customerCode     String?
+  customerName     String
+  customerStatus   String?
+  customerCategory PaymentCategory @default(ACTIVE)
+  branch           String
+  invoiceId        String          @unique
+  invoiceNumber    String?
+  invoiceDate      DateTime?
+  dueDate          DateTime?
+  amount           Decimal         @db.Decimal(18, 2)
+  paidAmount       Decimal         @default(0) @db.Decimal(18, 2)
+  outstandingAmount Decimal        @default(0) @db.Decimal(18, 2)
+  status           PaymentStatus   @default(CURRENT)
+  disputed         Boolean         @default(false)
+  futureDue        Boolean         @default(false)
+  overdueDays      Int             @default(0)
+  source           ImportSource    @default(MANUAL)
+  rawPayload       Json?
+  lastSyncedAt     DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([customerName])
+  @@index([branch])
+  @@index([customerCategory])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model Expense {
+  id              String             @id @default(cuid())
+  expenseCode     String             @unique
+  externalCode    String?            @unique
+  vendor          String
+  vendorCode      String?
+  branch          String
+  expenseHead     String
+  costCategory    String?
+  billNumber      String?
+  invoiceDate     DateTime?
+  dueDate         DateTime?
+  amount          Decimal            @db.Decimal(18, 2)
+  gstAmount       Decimal            @default(0) @db.Decimal(18, 2)
+  tdsAmount       Decimal            @default(0) @db.Decimal(18, 2)
+  netAmount       Decimal            @db.Decimal(18, 2)
+  paidAmount      Decimal            @default(0) @db.Decimal(18, 2)
+  balanceAmount   Decimal            @default(0) @db.Decimal(18, 2)
+  status          ExpenseStatus      @default(PENDING)
+  approvalLevel   Int                @default(1)
+  attachmentUrl   String?
+  description     String?
+  agingDays       Int                @default(0)
+  source          ImportSource       @default(MANUAL)
+  createdById     String?
+  approvedById    String?
+  rawPayload      Json?
+  lastPaymentDate DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  approvals       ExpenseApproval[]
+  settlements     ExpenseSettlement[]
+  createdBy       User?              @relation("ExpenseCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy      User?              @relation("ExpenseApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([vendor])
+  @@index([branch])
+  @@index([expenseHead])
+  @@index([status])
+  @@index([approvalLevel])
+}
+
+model ExpenseApproval {
+  id           String         @id @default(cuid())
+  expenseId    String
+  level        Int
+  approverRole UserRole
+  approverId   String?
+  status       ApprovalStatus @default(PENDING)
+  comments     String?
+  actedAt      DateTime?
+  notifiedAt   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  expense      Expense        @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  approver     User?          @relation("ApprovalActor", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@unique([expenseId, level])
+  @@index([approverRole, status])
+}
+
+model ExpenseSettlement {
+  id          String   @id @default(cuid())
+  expenseId   String
+  amount      Decimal  @db.Decimal(18, 2)
+  paidOn      DateTime
+  reference   String?
+  notes       String?
+  createdById String?
+  createdAt   DateTime @default(now())
+  expense     Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  createdBy   User?    @relation("SettlementActor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([paidOn])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  action     String
+  actorId    String?
+  actorEmail String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model ImportBatch {
+  id          String       @id @default(cuid())
+  module      String
+  source      ImportSource
+  filename    String?
+  records     Int          @default(0)
+  succeeded   Int          @default(0)
+  failed      Int          @default(0)
+  notes       String?
+  createdById String?
+  createdAt   DateTime     @default(now())
+  createdBy   User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([module, createdAt])
+}
+
+model ZohoSyncEvent {
+  id           String        @id @default(cuid())
+  eventType    ZohoEventType
+  sourceId     String?
+  module       String?
+  processed    Boolean       @default(false)
+  payload      Json?
+  syncedAt     DateTime?
+  errorMessage String?
+  createdAt    DateTime      @default(now())
+
+  @@index([processed, createdAt])
+}
+
