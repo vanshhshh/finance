@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "npm --prefix ../.. run build:shared",
     "build": "node scripts/run-next.mjs build",
     "dev": "node scripts/run-next.mjs dev",
     "lint": "npx tsc --noEmit",

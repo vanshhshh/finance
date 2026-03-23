@@ -5,6 +5,12 @@
     "jsx": "preserve",
     "incremental": true,
     "paths": {
+      "@finance-platform/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
+      "@finance-platform/shared/*": [
+        "../../packages/shared/src/*"
+      ],
       "@/*": [
         "./src/*"
       ]
