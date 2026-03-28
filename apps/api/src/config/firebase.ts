@@ -14,6 +14,10 @@ function createFirebaseApp() {
     !env.FIREBASE_CLIENT_EMAIL ||
     !env.FIREBASE_PRIVATE_KEY
   ) {
+    if (env.DEV_AUTH_BYPASS) {
+      return null;
+    }
+
     if (isProduction) {
       throw new Error("Firebase Admin credentials are required in production.");
     }
