@@ -6,13 +6,7 @@ import { signSessionToken } from "../../lib/jwt.js";
 import { prisma } from "../../lib/prisma.js";
 
 export async function authenticateWithFirebase(idToken: string) {
-  const firebaseAuth = getFirebaseAuth();
-
-  if (!firebaseAuth) {
-    if (!env.DEV_AUTH_BYPASS) {
-      throw new Error("Firebase is not configured.");
-    }
-
+  if (env.DEV_AUTH_BYPASS) {
     const devEmail = idToken.includes("@") ? idToken : `${idToken}@example.com`;
     const user = await prisma.user.upsert({
       where: {
@@ -30,6 +24,12 @@ export async function authenticateWithFirebase(idToken: string) {
     });
 
     return buildSession(user);
+  }
+
+  const firebaseAuth = getFirebaseAuth();
+
+  if (!firebaseAuth) {
+    throw new Error("Firebase is not configured.");
   }
 
   const decoded = await firebaseAuth.verifyIdToken(idToken);

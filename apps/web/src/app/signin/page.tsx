@@ -6,10 +6,9 @@ import { LockKeyhole, ShieldCheck } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { Panel } from "@/components/ui/panel";
-import { firebaseConfigured } from "@/lib/auth/firebase";
 
 export default function SignInPage() {
-  const { loginWithGoogle, loginWithDevEmail, user } = useAuth();
+  const { loginWithDevEmail, user } = useAuth();
   const [devEmail, setDevEmail] = useState("admin@altf.example");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -20,19 +19,6 @@ export default function SignInPage() {
       router.replace("/dashboard/payments");
     }
   }, [router, user]);
-
-  const handleGoogle = async () => {
-    try {
-      setBusy(true);
-      setError(null);
-      await loginWithGoogle();
-      router.replace("/dashboard/payments");
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Unable to sign in");
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const handleDev = async () => {
     try {
@@ -88,37 +74,25 @@ export default function SignInPage() {
             Enter the finance workspace
           </h2>
           <p className="mt-3 text-sm text-dusk">
-            Use Google via Firebase in production. A developer email shortcut stays
-            available when Firebase is not configured locally.
+            Sign in with a developer email for now.
           </p>
 
           <div className="mt-8 space-y-4">
-            {firebaseConfigured ? (
+            <>
+              <input
+                value={devEmail}
+                onChange={(event) => setDevEmail(event.target.value)}
+                placeholder="admin@altf.example"
+              />
               <button
                 type="button"
-                onClick={() => void handleGoogle()}
+                onClick={() => void handleDev()}
                 disabled={busy}
                 className="w-full rounded-2xl bg-ink px-4 py-3 text-sm font-semibold text-white"
               >
-                {busy ? "Signing in..." : "Continue with Google"}
+                {busy ? "Signing in..." : "Continue with Developer Email"}
               </button>
-            ) : (
-              <>
-                <input
-                  value={devEmail}
-                  onChange={(event) => setDevEmail(event.target.value)}
-                  placeholder="admin@altf.example"
-                />
-                <button
-                  type="button"
-                  onClick={() => void handleDev()}
-                  disabled={busy}
-                  className="w-full rounded-2xl bg-ink px-4 py-3 text-sm font-semibold text-white"
-                >
-                  {busy ? "Signing in..." : "Continue with Developer Email"}
-                </button>
-              </>
-            )}
+            </>
           </div>
 
           {error ? (

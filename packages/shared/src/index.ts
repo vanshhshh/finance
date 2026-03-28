@@ -126,7 +126,7 @@ export const updateUserRoleSchema = z.object({
 });
 
 export const authFirebaseSchema = z.object({
-  idToken: z.string().min(10),
+  idToken: z.string().min(3),
 });
 
 export const webhookSchema = z.object({
